@@ -29,11 +29,12 @@ module top (
     wire ram_write_enable;
     wire [31:0] ram_read_data;
     wire [31:0] write_back_data;
+    wire is_branch = (opcode_out == 7'h63); // beq, bne, etc.
+    wire take_branch;
 
     // PC Adder
     assign is_load = (opcode_out == 7'h03); //lw
     assign is_store = (opcode_out == 7'h23); //sw
-    assign next_pc_wire = current_pc_wire + 32'd4; // Increment PC by 4 for the next instruction
     assign imm_ext = (is_store) ? imm_s : imm_i; // Select the correct immediate based on instruction type
     assign use_imm = (opcode_out == 7'h13)||is_load||is_store; // Use immediate for I-type instructions and load/store instructions
     assign reg_write_enable = (opcode_out == 7'h13) || (opcode_out == 7'h33) || is_load; // Enable register write for R-type and I-type instructions, and load instructions
@@ -42,7 +43,9 @@ module top (
     assign ram_write_enable = is_store; // Enable RAM write for store instructions
     assign write_back_data = (is_load) ? ram_read_data : alu_results; // For load instructions, we want to write back the data read from RAM, otherwise we write back the ALU results
     assign imm_b = {{20{fct[31]}}, fct[7], fct[30:25], fct[11:8], 1'b0}; // Immediate for B-type instructions (sign-extended)
-    
+    assign take_branch = is_branch && zero_flag; // For simplicity, we only handle beq (branch if equal) here. 
+    assign next_pc_wire = (take_branch) ? (current_pc_wire + imm_b) : (current_pc_wire + 32'd4);
+
     // Instantiate the PC
     pc pc_instance (
         .clk(clk),
