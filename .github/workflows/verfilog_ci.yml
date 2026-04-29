@@ -1,0 +1,25 @@
+name: RISC-V CPU Verfication Pipeline
+
+on: [push, pull_request]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: CHeckout Repo
+      uses: actions/checkout@v3
+
+    - name: Install Verilog
+      run:  |
+        sudo apt-get update
+        sudo apt-get install -y iverilog
+    
+    - name: Complite Hardware Design
+      run: |
+        mkdir -p build
+        iverilog -o build/top_sim src/pc.sv src/imem.sv src/decoder.sv src/regfile.sv src/alu.sv src/dmem.sv src/top.sv tb/top_tb.sv
+    
+    - name: Run Simulatiopn
+      run: |
+        vvp build/top_sim
