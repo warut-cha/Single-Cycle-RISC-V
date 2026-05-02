@@ -1,25 +1,41 @@
-name: RISC-V CPU Verfication Pipeline
+name: ASIC RTL Verification Flow
 
 on: [push, pull_request]
 
 jobs:
-  build-and-test:
+  asic-flow:
     runs-on: ubuntu-latest
 
     steps:
-    - name: CHeckout Repo
+    - name: Checkout Repo
       uses: actions/checkout@v3
 
-    - name: Install Verilog
+    - name: Install ASIC Tools (Icarus, Verilator, Yosys)
       run:  |
         sudo apt-get update
-        sudo apt-get install -y iverilog
-    
-    - name: Complite Hardware Design
+        sudo apt-get install -y iverilog verilator yosys
+
+    - name: 1. Run Hardware Linting (Verilator)
+      run: |
+        echo "Running strict hardware linting"
+        verilator --lint-only -Wall -Isrc/rtl src/rtl/*.sv
+        
+    - name: 2. Compile & Simulate (Icarus Verilog)
       run: |
         mkdir -p build
-        iverilog -o build/top_sim src/pc.sv src/imem.sv src/decoder.sv src/regfile.sv src/alu.sv src/dmem.sv src/top.sv tb/top_tb.sv
-    
-    - name: Run Simulatiopn
-      run: |
+        iverilog -g2012 -o build/top_sim src/rtl/*.sv tb/top_tb.sv
+        
+        echo "Running Simulation"
         vvp build/top_sim
+    
+    - name: 3. Logic Synthesis & Area Report (Yosys)
+      run: |
+        echo "Synthesizing RTL into gate-level netlist"
+        cat << 'EOF' > synth.ys
+        read_verilog -sv src/rtl/*.sv
+        hierarchy -check -top top
+        proc; opt; memory; opt; fsm; opt
+        synth
+        stat
+        EOF
+        yosys -c synth.ys

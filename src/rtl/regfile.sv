@@ -29,4 +29,16 @@ module regfile (
             registers[rd_add] <= rd_data;
         end
     end
+
+    // Assertion to ensure x0 is always zero
+    `ifndef __ICARUS__
+    `ifndef SYNTHESIS
+    property p_x0_is_always_zero;
+        @(posedge clk) (write_enable == 1'b1 && rd_add == 5'b00000) |-> (registers[0] == 32'b0);
+    endproperty
+
+    assert_x0_zero: assert property(p_x0_is_always_zero) 
+        else $fatal(1, "Attempted to overwrite x0 with non-zero value");
+    `endif
+    `endif
 endmodule
