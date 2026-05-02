@@ -10,6 +10,7 @@ module imem(
         $readmemh("src/txt/program.hex", rom);
     end
 
-    assign instr = rom[address[31:2]]; //word aligned, so ignore the last 2 bits
+    //1024 needs 10 bits
+    assign instr = rom[address[11:2]]; //word aligned, so ignore the last 2 bits
 
 endmodule

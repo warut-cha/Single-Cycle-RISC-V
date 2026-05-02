@@ -41,4 +41,5 @@ module regfile (
         else $fatal(1, "Attempted to overwrite x0 with non-zero value");
     `endif
     `endif
+
 endmodule

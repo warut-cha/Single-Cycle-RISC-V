@@ -45,7 +45,12 @@ module top (
     assign imm_b = {{20{fct[31]}}, fct[7], fct[30:25], fct[11:8], 1'b0}; // Immediate for B-type instructions (sign-extended)
     assign take_branch = is_branch && zero_flag; // For simplicity, we only handle beq (branch if equal) here. 
     assign next_pc_wire = (take_branch) ? (current_pc_wire + imm_b) : (current_pc_wire + 32'd4);
-    always@(posedge clk or posedge rst) begin
+    assign ram_write_enable = (opcode_out == 7'h23);
+    
+    always@(*) begin
+
+        alu_control = 4'b0000; // Default to ADD for load/store
+
         if (is_load||is_store) begin
             alu_control = 4'b0000; // ADD
         end else if (opcode_out == 7'h33) begin //R-instruction
@@ -113,4 +118,3 @@ module top (
     );
 
 endmodule
-
