@@ -38,4 +38,4 @@ jobs:
         synth
         stat
         EOF
-        yosys -c synth.ys
+        yosys -s synth.ys
