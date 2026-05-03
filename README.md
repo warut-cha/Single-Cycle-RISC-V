@@ -1,4 +1,4 @@
-# Single-Cycle RISC-V CPU Architecture
+# Single-Cycle RISC-V CPU Architecture (OUT OF DATE since 03/05-2026)
 
 ## Roadmap & Future Work
 
