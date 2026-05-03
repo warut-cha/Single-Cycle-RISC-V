@@ -59,11 +59,12 @@ module top_tb;
     end
 
     initial begin
-        $monitor("Time: %0t | PC: %h | Inst: %h | Op: %h | x1: %0d | x2: %0d | x3: %0d",
+        $monitor("Time: %0t | PC: %h | Inst: %h | Op: %h | x0: %0d | x1: %0d | x2: %0d | x3: %0d",
                 $time,
                 dut.current_pc_wire,
                 instruction_tb,
                 op_tb,
+                dut.regfile_instance.registers[0],
                 dut.regfile_instance.registers[1],
                 dut.regfile_instance.registers[2],
                 dut.regfile_instance.registers[3]
