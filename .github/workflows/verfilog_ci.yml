@@ -10,10 +10,12 @@ jobs:
     - name: Checkout Repo
       uses: actions/checkout@v3
 
-    - name: Install ASIC Tools (Icarus, Verilator, Yosys)
+    - name: Install ASIC Tools & AI Dependencies
       run:  |
         sudo apt-get update
         sudo apt-get install -y iverilog verilator yosys
+        # Install the Gemini SDK so the AI agents can run
+        pip install google-genai --break-system-packages
         
     - name: Create Report Folders
       run: |
@@ -26,8 +28,10 @@ jobs:
     - name: 1. Run Hardware Linting (Verilator)
       run: |
         echo "Running strict hardware linting"
-        verilator --lint-only -Wall -Isrc/rtl src/rtl/*.sv
+        # Added the missing '\' at the end of the line
+        verilator --lint-only -Wall -Isrc/rtl src/rtl/*.sv \
           2>&1 | tee -a reports/lint/lint_log.txt
+        
         status=${PIPESTATUS[0]}
         echo "Verilator exit code: $status" | tee -a reports/lint/lint_log.txt
 
@@ -38,12 +42,12 @@ jobs:
           exit "$status"
         fi
 
-        
     - name: 2. Compile Simulation (Icarus Verilog)
       run: |
         mkdir -p build
-        iverilog -g2012 -o build/top_sim src/rtl/*.sv tb/top_tb.sv
-        2>&1 | tee -a reports/sim/compile_log.txt
+        # Added the missing '\' at the end of the line
+        iverilog -g2012 -o build/top_sim src/rtl/*.sv tb/top_tb.sv \
+          2>&1 | tee -a reports/sim/compile_log.txt
 
     - name: 3. Run Simulation
       run: |
@@ -61,8 +65,6 @@ jobs:
           echo "SIM FAIL" | tee -a reports/sim/sim_log.txt
           exit "$status"
         fi
- 
-    
 
     - name: 4. Logic Synthesis & Area Report
       run: |
@@ -72,7 +74,8 @@ jobs:
           2>&1 | tee -a reports/synth/synth_log.txt
 
         status=${PIPESTATUS[0]}
-        echo "Yosys exit code: $status" | tee -a reports/synthsynth_log.txt
+        # Fixed the typo in the file path here
+        echo "Yosys exit code: $status" | tee -a reports/synth/synth_log.txt
 
         if [ "$status" -eq 0 ]; then
           echo "SYNTH PASS" | tee -a reports/synth/synth_log.txt
