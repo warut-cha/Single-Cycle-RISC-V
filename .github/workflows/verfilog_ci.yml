@@ -10,32 +10,98 @@ jobs:
     - name: Checkout Repo
       uses: actions/checkout@v3
 
-    - name: Install ASIC Tools (Icarus, Verilator, Yosys)
+    - name: Install ASIC Tools & AI Dependencies
       run:  |
         sudo apt-get update
         sudo apt-get install -y iverilog verilator yosys
+        # Install the Gemini SDK so the AI agents can run
+        pip install google-genai --break-system-packages
+        
+    - name: Create Report Folders
+      run: |
+        mkdir -p build
+        mkdir -p reports/sim
+        mkdir -p reports/lint
+        mkdir -p reports/synth
+        mkdir -p reports/ai
 
     - name: 1. Run Hardware Linting (Verilator)
       run: |
         echo "Running strict hardware linting"
-        verilator --lint-only -Wall -Isrc/rtl src/rtl/*.sv
+        # Added the missing '\' at the end of the line
+        verilator --lint-only -Wall -Isrc/rtl src/rtl/*.sv \
+          2>&1 | tee -a reports/lint/lint_log.txt
         
-    - name: 2. Compile & Simulate (Icarus Verilog)
+        status=${PIPESTATUS[0]}
+        echo "Verilator exit code: $status" | tee -a reports/lint/lint_log.txt
+
+        if [ "$status" -eq 0 ]; then
+          echo "LINT PASS" | tee -a reports/lint/lint_log.txt
+        else
+          echo "LINT FAIL" | tee -a reports/lint/lint_log.txt
+          exit "$status"
+        fi
+
+    - name: 2. Compile Simulation (Icarus Verilog)
       run: |
         mkdir -p build
-        iverilog -g2012 -o build/top_sim src/rtl/*.sv tb/top_tb.sv
-        
-        echo "Running Simulation"
-        vvp build/top_sim
-    
-    - name: 3. Logic Synthesis & Area Report (Yosys)
+        # Added the missing '\' at the end of the line
+        iverilog -g2012 -o build/top_sim src/rtl/*.sv tb/top_tb.sv \
+          2>&1 | tee -a reports/sim/compile_log.txt
+
+    - name: 3. Run Simulation
       run: |
-        echo "Synthesizing RTL into gate-level netlist"
-        cat << 'EOF' > synth.ys
-        read_verilog -sv src/rtl/*.sv
-        hierarchy -check -top top
-        proc; opt; memory; opt; fsm; opt
-        synth
-        stat
-        EOF
-        yosys -s synth.ys
+        echo "Running simulation..." | tee reports/sim/sim_log.txt
+
+        vvp build/top_sim \
+          2>&1 | tee -a reports/sim/sim_log.txt
+
+        status=${PIPESTATUS[0]}
+        echo "Simulation exit code: $status" | tee -a reports/sim/sim_log.txt
+
+        if [ "$status" -eq 0 ]; then
+          echo "SIM PASS" | tee -a reports/sim/sim_log.txt
+        else
+          echo "SIM FAIL" | tee -a reports/sim/sim_log.txt
+          exit "$status"
+        fi
+
+    - name: 4. Logic Synthesis & Area Report
+      run: |
+        echo "Running Yosys synthesis..." | tee reports/synth/synth_log.txt
+
+        yosys -s scripts/synth.ys \
+          2>&1 | tee -a reports/synth/synth_log.txt
+
+        status=${PIPESTATUS[0]}
+        # Fixed the typo in the file path here
+        echo "Yosys exit code: $status" | tee -a reports/synth/synth_log.txt
+
+        if [ "$status" -eq 0 ]; then
+          echo "SYNTH PASS" | tee -a reports/synth/synth_log.txt
+        else
+          echo "SYNTH FAIL" | tee -a reports/synth/synth_log.txt
+          exit "$status"
+        fi
+
+    - name: 5. Run AI RTL Agents
+      if: always()
+      env:
+        GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+      run: |
+        if [ -n "$GOOGLE_API_KEY" ]; then
+          echo "GOOGLE_API_KEY detected. Running Gemini-enabled agents."
+          python3 tools/ai_agent/run_agents.py
+        else
+          echo "GOOGLE_API_KEY not found. Running rule-based fallback agents."
+          DISABLE_GEMINI=1 python3 tools/ai_agent/run_agents.py
+        fi
+
+    - name: 6. Upload Reports
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: rtl-verification-reports
+        path: |
+          reports/
+          build/

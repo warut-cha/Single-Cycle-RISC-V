@@ -1,0 +1,9 @@
+read_verilog -sv src/rtl/*.sv
+hierarchy -check -top top
+proc; opt; memory; opt; fsm; opt
+synth
+stat
+
+write_verilog reports/synth/top_netlist.v
+
+
