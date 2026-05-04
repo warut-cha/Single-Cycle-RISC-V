@@ -34,6 +34,13 @@ def run_codex(prompt, fallback_text, timeout_seconds=300):
     if os.getenv("DISABLE_CODEX", "0") == "1":
         return fallback_text
 
+    if not os.getenv("OPENAI_API_KEY"):
+        return (
+            fallback_text
+            + "\n\n---\n"
+            + "OPENAI_API_KEY was not found, so this report used the local rule-based fallback.\n"
+        )
+        
     if not codex_available():
         return (
             fallback_text

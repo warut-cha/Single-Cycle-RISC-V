@@ -2,5 +2,13 @@ build/
 reports/
 *.vcd
 *.fst
+
 .env
 *.env
+
+__pycache__/
+*.pyc
+
+venv/
+env/
+.venv/
