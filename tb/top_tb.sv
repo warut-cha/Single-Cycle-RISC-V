@@ -53,19 +53,21 @@ module top_tb;
             $fatal(1);
         end
 
-        if (dut.regfile_instance.registers[3] !== 32'd0) begin
-            $display("Executed math/mem. x3 = %0d",
-                     dut.regfile_instance.registers[3]);
-        end else begin
-            $display("SIM FAIL: x3 is 0. The data path failed.");
+        if (dut.regfile_instance.registers[3] !== 32'd42) begin
+            $display("SIM FAIL: APB read expected x3 = 42, got %0d",
+            dut.regfile_instance.registers[3]);
             $fatal(1);
+        end else begin
+            $display("APB read PASS: x3 = %0d",
+            dut.regfile_instance.registers[3]);
         end
 
         if (led_out !== 8'd42) begin
-            $display("SIM FAIL: led_out expected 42, got %0d", led_out);
+            $display("SIM FAIL: APB write expected led_out = 42, got %0d", led_out);
             $fatal(1);
+        end else begin
+            $display("APB write PASS: led_out = %0d", led_out);
         end
-
         $display("SIM PASS: led_out = %0d", led_out);
         $display("Shutting down");
         $finish;
