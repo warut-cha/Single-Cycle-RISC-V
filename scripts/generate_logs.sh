@@ -19,8 +19,8 @@ iverilog -o build/top_sim \
   src/rtl/regfile.sv \
   src/rtl/alu.sv \
   src/rtl/dmem.sv \
+  src/rtl/apb_led.sv \
   src/rtl/top.sv \
-  src/rtl/led_mimo.sv \
   tb/top_tb.sv \
   2>&1 | tee reports/sim/compile_log.txt
 
@@ -48,7 +48,15 @@ echo
 
 {
   echo "Running Verilator lint..."
-  verilator --lint-only --Wall src/rtl/*.sv
+  verilator --lint-only --Wall --top-module top \
+    src/rtl/pc.sv \
+    src/rtl/imem.sv \
+    src/rtl/decoder.sv \
+    src/rtl/regfile.sv \
+    src/rtl/alu.sv \
+    src/rtl/dmem.sv \
+    src/rtl/apb_led.sv \
+    src/rtl/top.sv
   status=$?
   echo "Verilator exit code: $status"
 

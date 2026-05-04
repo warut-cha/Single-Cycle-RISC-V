@@ -35,6 +35,15 @@ module top (
     wire is_led_access;
     wire dmem_write_enable;
 
+    wire apb_psel;
+    wire apb_penable;
+    wire apb_pwrite;
+    wire [31:0] apb_paddr;
+    wire [31:0] apb_pwrite_data;
+    wire [31:0] apb_pread_data;
+    wire apb_pready;
+    wire apb_pslverr;
+    wire unused_apb_outputs = |{apb_pread_data, apb_pready, apb_pslverr};
     logic [3:0] alu_control;
 
     // PC Adder
@@ -49,8 +58,15 @@ module top (
     assign take_branch = is_branch && zero_flag; // For simplicity, we only handle beq (branch if equal) here. 
     assign next_pc_wire = (take_branch) ? (current_pc_wire + imm_b) : (current_pc_wire + 32'd4);
     assign ram_write_enable = (opcode_out == 7'h23);
+
     assign is_led_access = (alu_results == 32'h0000_0100);
     assign dmem_write_enable = ram_write_enable && !is_led_access;
+
+    assign apb_psel = ram_write_enable && is_led_access;
+    assign apb_penable = ram_write_enable && is_led_access;
+    assign apb_pwrite = ram_write_enable;
+    assign apb_paddr = alu_results;
+    assign apb_pwrite_data = rs2_data;
 
     always @(*) begin
         alu_control = 4'b0000;
@@ -125,12 +141,17 @@ module top (
         .read_data(ram_read_data) // wire coming from dmem (not implemented yet)
     );
 
-    led_mmio led_mmio_inst (
-        .clk(clk),
-        .rst(rst),
-        .write_enable(ram_write_enable),
-        .address(alu_results),
-        .write_data(rs2_data),
+    apb_led apb_led_instance (
+        .pclk(clk),
+        .presetn(~rst),
+        .psel(apb_psel),
+        .penable(apb_penable),
+        .pwrite(apb_pwrite),
+        .paddress(apb_paddr),
+        .pwrite_data(apb_pwrite_data),
+        .pread_data(apb_pread_data),
+        .pready(apb_pready),
+        .pslverr(apb_pslverr),
         .led_out(led_out)
     );
     
