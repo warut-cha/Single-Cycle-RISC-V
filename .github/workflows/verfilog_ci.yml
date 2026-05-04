@@ -20,7 +20,7 @@ jobs:
         mkdir -p build
         mkdir -p reports/sim
         mkdir -p reports/lint
-        mkdir -p reports/synt
+        mkdir -p reports/synth
         mkdir -p reports/ai
 
     - name: 1. Run Hardware Linting (Verilator)
