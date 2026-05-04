@@ -1,3 +1,0 @@
-Running Verilator lint...
-Verilator exit code: 0
-LINT PASS
