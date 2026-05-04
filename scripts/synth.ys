@@ -1,24 +1,7 @@
-read_verilog -sv src/rtl/pc.sv
-read_verilog -sv src/rtl/imem.sv
-read_verilog -sv src/rtl/decoder.sv
-read_verilog -sv src/rtl/regfile.sv
-read_verilog -sv src/rtl/alu.sv
-read_verilog -sv src/rtl/dmem.sv
-read_verilog -sv src/rtl/top.sv
-
+read_verilog -sv src/rtl/*.sv
 hierarchy -check -top top
-
-proc
-opt
-fsm
-opt
-memory
-opt
-techmap
-opt
-abc
-opt
-
+proc; opt; memory; opt; fsm; opt
+synth
 stat
 
 write_verilog reports/synth/top_netlist.v
