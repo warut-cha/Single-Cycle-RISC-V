@@ -61,6 +61,32 @@ module top_tb;
             $display("APB read PASS: x3 = %0d",
             dut.regfile_instance.registers[3]);
         end
+        if (dut.regfile_instance.registers[12] !== 32'd42) begin
+            $display("SIM FAIL: BNE test failed. x12 = %0d",
+                    dut.regfile_instance.registers[12]);
+            $fatal(1);
+        end else begin
+            $display("BNE PASS: x12 = %0d",
+                    dut.regfile_instance.registers[12]);
+        end
+
+        if (dut.regfile_instance.registers[14] !== 32'd55) begin
+            $display("SIM FAIL: JAL test failed. x14 = %0d",
+                    dut.regfile_instance.registers[14]);
+            $fatal(1);
+        end else begin
+            $display("JAL PASS: x14 = %0d",
+                    dut.regfile_instance.registers[14]);
+        end
+
+        if (dut.regfile_instance.registers[17] !== 32'd77) begin
+            $display("SIM FAIL: JALR test failed. x17 = %0d",
+                    dut.regfile_instance.registers[17]);
+            $fatal(1);
+        end else begin
+            $display("JALR PASS: x17 = %0d",
+                    dut.regfile_instance.registers[17]);
+        end
 
         if (led_out !== 8'd42) begin
             $display("SIM FAIL: APB write expected led_out = 42, got %0d", led_out);

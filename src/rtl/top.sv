@@ -30,7 +30,6 @@ module top (
     wire ram_write_enable;
     wire [31:0] ram_read_data;
     wire [31:0] write_back_data;
-    wire is_branch = (opcode_out == 7'h63); // beq, bne, etc.
     wire take_branch;
     wire is_led_access;
     wire dmem_write_enable;
@@ -44,37 +43,55 @@ module top (
     wire apb_pready;
     wire apb_pslverr;
     wire unused_apb_outputs = |{apb_pread_data, apb_pready, apb_pslverr};
+    wire is_branch;
+    wire is_jal;
+    wire is_jalr;
+    wire is_beq;
+    wire is_bne;
+    wire [31:0] imm_j;
+    wire [31:0] jalr_target;
+    wire [31:0] pc_plus_4;
+    
     logic [3:0] alu_control;
 
-    // PC Adder
     assign is_load = (opcode_out == 7'h03); //lw
     assign is_store = (opcode_out == 7'h23); //sw
+    assign imm_j = {{12{fct[31]}}, fct[19:12], fct[20], fct[30:21], 1'b0};
     assign imm_ext = (is_store) ? imm_s : imm_i; // Select the correct immediate based on instruction type
-    assign use_imm = (opcode_out == 7'h13)||is_load||is_store; // Use immediate for I-type instructions and load/store instructions
-    assign reg_write_enable = (opcode_out == 7'h13) || (opcode_out == 7'h33) || is_load; // Enable register write for R-type and I-type instructions, and load instructions
+    assign use_imm = (opcode_out == 7'h13)||is_load||is_store||is_jalr; // Use immediate for I-type instructions and load/store instructions
+    assign reg_write_enable = (opcode_out == 7'h13) || (opcode_out == 7'h33) || is_load || is_jal ||is_jalr; // Enable register write for R-type and I-type instructions, and load instructions
     assign alu_b_input = (use_imm) ? imm_ext : rs2_data; // Select between immediate value and register data for ALU input
-    assign write_back_data = (is_load)? ((is_led_access) ? apb_pread_data : ram_read_data): alu_results;
+    assign write_back_data = (is_jal || is_jalr) ? pc_plus_4 : (is_load) ? ((is_led_access) ? apb_pread_data : ram_read_data) : alu_results;
     assign imm_b = {{20{fct[31]}}, fct[7], fct[30:25], fct[11:8], 1'b0}; // Immediate for B-type instructions (sign-extended)
-    assign take_branch = is_branch && zero_flag; // For simplicity, we only handle beq (branch if equal) here. 
-    assign next_pc_wire = (take_branch) ? (current_pc_wire + imm_b) : (current_pc_wire + 32'd4);
+    assign pc_plus_4 = current_pc_wire + 32'd4;
+    assign take_branch = (is_beq && zero_flag) || (is_bne && !zero_flag);
+    assign jalr_target = (rs1_data + imm_i) & 32'hffff_fffe;
+    assign next_pc_wire = is_jal ? (current_pc_wire + imm_j) :is_jal ? jalr_target : take_branch ? (current_pc_wire + imm_b) : pc_plus_4;
     assign ram_write_enable = (opcode_out == 7'h23);
 
     assign is_led_access = (alu_results == 32'h0000_0100);
     assign dmem_write_enable = ram_write_enable && !is_led_access;
 
-    assign apb_psel    = is_led_access && (is_store || is_load);
+    assign apb_psel = is_led_access && (is_store || is_load);
     assign apb_penable = is_led_access && (is_store || is_load);
-    assign apb_pwrite  = is_store;
-    assign apb_paddr   = alu_results;
-    assign apb_pwrite_data  = rs2_data;
+    assign apb_pwrite = is_store;
+    assign apb_paddr = alu_results;
+    assign apb_pwrite_data = rs2_data;
+
+    assign is_branch = (opcode_out == 7'h63);
+    assign is_jal = (opcode_out == 7'h6f);
+    assign is_jalr = (opcode_out == 7'h67);
+
+    assign is_beq = is_branch && (funct3_out == 3'b000);
+    assign is_bne = is_branch && (funct3_out == 3'b001);
 
     always @(*) begin
         alu_control = 4'b0000;
 
-        if (is_load || is_store) begin
-            alu_control = 4'b0000; // ADD
+        if (is_load || is_store || is_jalr) begin
+            alu_control = 4'b0000; // ADD for address/target calculation
         end else if (is_branch) begin
-            alu_control = 4'b0001; // SUB for BEQ
+            alu_control = 4'b0001; // SUB for BEQ/BNE comparison
         end else if (opcode_out == 7'h33) begin
             if (funct3_out == 3'b000 && funct7_out == 7'b0000001)
                 alu_control = 4'b0101; // MUL
