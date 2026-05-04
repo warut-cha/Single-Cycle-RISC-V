@@ -13,7 +13,7 @@ jobs:
     - name: Install ASIC Tools (Icarus, Verilator, Yosys)
       run:  |
         sudo apt-get update
-        sudo apt-get install -y iverilog verilator yosys2
+        sudo apt-get install -y iverilog verilator yosys
         
     - name: Create Report Folders
       run: |
@@ -93,7 +93,7 @@ jobs:
           echo "OPENAI_API_KEY not found. Running rule-based fallback agents."
           DISABLE_CODEX=1 python3 tools/ai_agent/run_agents.py
         fi
-        
+
     - name: 6. Upload Reports
       if: always()
       uses: actions/upload-artifact@v4
