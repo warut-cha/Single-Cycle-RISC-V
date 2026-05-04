@@ -5,4 +5,4 @@ synth
 stat
 
 write_verilog reports/synth/top_netlist.v
-YS
+EOF
