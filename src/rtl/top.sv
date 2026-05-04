@@ -53,7 +53,7 @@ module top (
     assign use_imm = (opcode_out == 7'h13)||is_load||is_store; // Use immediate for I-type instructions and load/store instructions
     assign reg_write_enable = (opcode_out == 7'h13) || (opcode_out == 7'h33) || is_load; // Enable register write for R-type and I-type instructions, and load instructions
     assign alu_b_input = (use_imm) ? imm_ext : rs2_data; // Select between immediate value and register data for ALU input
-    assign write_back_data = (is_load) ? ram_read_data : alu_results; // For load instructions, we want to write back the data read from RAM, otherwise we write back the ALU results
+    assign write_back_data = (is_load)? ((is_led_access) ? apb_pread_data : ram_read_data): alu_results;
     assign imm_b = {{20{fct[31]}}, fct[7], fct[30:25], fct[11:8], 1'b0}; // Immediate for B-type instructions (sign-extended)
     assign take_branch = is_branch && zero_flag; // For simplicity, we only handle beq (branch if equal) here. 
     assign next_pc_wire = (take_branch) ? (current_pc_wire + imm_b) : (current_pc_wire + 32'd4);
@@ -62,11 +62,11 @@ module top (
     assign is_led_access = (alu_results == 32'h0000_0100);
     assign dmem_write_enable = ram_write_enable && !is_led_access;
 
-    assign apb_psel = ram_write_enable && is_led_access;
-    assign apb_penable = ram_write_enable && is_led_access;
-    assign apb_pwrite = ram_write_enable;
-    assign apb_paddr = alu_results;
-    assign apb_pwrite_data = rs2_data;
+    assign apb_psel    = is_led_access && (is_store || is_load);
+    assign apb_penable = is_led_access && (is_store || is_load);
+    assign apb_pwrite  = is_store;
+    assign apb_paddr   = alu_results;
+    assign apb_pwrite_data  = rs2_data;
 
     always @(*) begin
         alu_control = 4'b0000;
