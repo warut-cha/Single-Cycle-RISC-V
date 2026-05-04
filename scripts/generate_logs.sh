@@ -20,6 +20,7 @@ iverilog -o build/top_sim \
   src/rtl/alu.sv \
   src/rtl/dmem.sv \
   src/rtl/top.sv \
+  src/rtl/led_mimo.sv \
   tb/top_tb.sv \
   2>&1 | tee reports/sim/compile_log.txt
 
