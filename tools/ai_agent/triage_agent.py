@@ -6,7 +6,7 @@ from tools.common.codex_client import codex_run, load_prompt
 
 SIM_LOG = "reports/sim/sim_log.txt"
 LINT_LOG = "reports/lint/lint_log.txt"
-SYTH_LOG = "reports/synthesisesis/synth_log.txt"
+SYTH_LOG = "reports/synth/synth_log.txt"
 OUT_REPORT = "reports/ai/triage_report.md"
 
 def status_from_log(

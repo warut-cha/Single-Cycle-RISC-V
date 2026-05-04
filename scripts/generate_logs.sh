@@ -7,7 +7,7 @@ cd "$REPO_ROOT"
 mkdir -p build
 mkdir -p reports/sim
 mkdir -p reports/lint
-mkdir -p reports/synthesis
+mkdir -p reports/synth
 mkdir -p reports/ai
 
 echo "Generating sim_log"
@@ -35,9 +35,9 @@ echo
 
 if [ -f scripts/synth.ys ]; then
   yosys -s scripts/synth.ys \
-    2>&1 | tee reports/synthesisesis/synth_log.txt
+    2>&1 | tee reports/synth/synth_log.txt
 else
-  echo "Missing scripts/synth.ys" | tee reports/synthesisesis/synth_log.txt
+  echo "Missing scripts/synth.ys" | tee reports/synth/synth_log.txt
 fi
 
 
@@ -66,4 +66,4 @@ echo
 echo "Simulation log: reports/sim/sim_log.txt"
 echo "Compile log:    reports/sim/compile_log.txt"
 echo "Lint log:       reports/lint/lint_log.txt"
-echo "Synthesis log:  reports/synthesisesis/synth_log.txt"
+echo "Synthesis log:  reports/synth/synth_log.txt"

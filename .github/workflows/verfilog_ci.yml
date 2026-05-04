@@ -66,18 +66,18 @@ jobs:
 
     - name: 4. Logic Synthesis & Area Report
       run: |
-        echo "Running Yosys synthesis..." | tee reports/synthesisesis/synth_log.txt
+        echo "Running Yosys synthesis..." | tee reports/synth/synth_log.txt
 
         yosys -s scripts/synth.ys \
-          2>&1 | tee -a reports/synthesisesis/synth_log.txt
+          2>&1 | tee -a reports/synth/synth_log.txt
 
         status=${PIPESTATUS[0]}
-        echo "Yosys exit code: $status" | tee -a reports/synthesisesis/synth_log.txt
+        echo "Yosys exit code: $status" | tee -a reports/synthsynth_log.txt
 
         if [ "$status" -eq 0 ]; then
-          echo "SYNTH PASS" | tee -a reports/synthesisesis/synth_log.txt
+          echo "SYNTH PASS" | tee -a reports/synth/synth_log.txt
         else
-          echo "SYNTH FAIL" | tee -a reports/synthesisesis/synth_log.txt
+          echo "SYNTH FAIL" | tee -a reports/synth/synth_log.txt
           exit "$status"
         fi
 
