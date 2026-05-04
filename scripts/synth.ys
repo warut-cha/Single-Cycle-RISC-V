@@ -4,6 +4,6 @@ proc; opt; memory; opt; fsm; opt
 synth
 stat
 
-write_verilog reports/synth/top_netlist.v
+write_verilog reports/synthesisesis/top_netlist.v
 
 
