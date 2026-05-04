@@ -28,8 +28,15 @@ jobs:
     - name: 1. Run Hardware Linting (Verilator)
       run: |
         echo "Running strict hardware linting"
-        # Added the missing '\' at the end of the line
-        verilator --lint-only -Wall -Isrc/rtl src/rtl/*.sv \
+        verilator --lint-only -Wall -Isrc/rtl \
+            src/rtl/pc.sv \
+            src/rtl/imem.sv \
+            src/rtl/decoder.sv \
+            src/rtl/regfile.sv \
+            src/rtl/alu.sv \
+            src/rtl/dmem.sv \
+            src/rtl/apb_led.sv \
+            src/rtl/top.sv
           2>&1 | tee -a reports/lint/lint_log.txt
         
         status=${PIPESTATUS[0]}
@@ -45,8 +52,15 @@ jobs:
     - name: 2. Compile Simulation (Icarus Verilog)
       run: |
         mkdir -p build
-        # Added the missing '\' at the end of the line
-        iverilog -o build/top_sim src/rtl/*.sv tb/top_tb.sv \
+        iverilog -o build/top_sim \
+          src/rtl/pc.sv \
+          src/rtl/imem.sv \
+          src/rtl/decoder.sv \
+          src/rtl/regfile.sv \
+          src/rtl/alu.sv \
+          src/rtl/dmem.sv \
+          src/rtl/apb_led.sv \
+          src/rtl/top.sv tb/top_tb.sv \
           2>&1 | tee -a reports/sim/compile_log.txt
 
     - name: 3. Run Simulation
@@ -74,7 +88,6 @@ jobs:
           2>&1 | tee -a reports/synth/synth_log.txt
 
         status=${PIPESTATUS[0]}
-        # Fixed the typo in the file path here
         echo "Yosys exit code: $status" | tee -a reports/synth/synth_log.txt
 
         if [ "$status" -eq 0 ]; then
