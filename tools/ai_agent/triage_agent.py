@@ -2,7 +2,7 @@ from pathlib import Path
 import re
 
 from tools.common.file_utils import read_text, write_text
-from tools.common.codex_client import codex_run, load_prompt
+from tools.common.gemini_client import gemini_run, load_prompt
 
 SIM_LOG = "reports/sim/sim_log.txt"
 LINT_LOG = "reports/lint/lint_log.txt"
@@ -131,7 +131,7 @@ def main():
     Generate a markdown triage report. 
     Do not invent files, warning, or signal that are not present in the logs.
     """
-    report = codex_run(prompt, fallback)
+    report = gemini_run(prompt, fallback)
     write_text(OUT_REPORT, report)
     print(f"Generated {OUT_REPORT}")
 

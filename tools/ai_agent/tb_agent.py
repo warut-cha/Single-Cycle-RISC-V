@@ -2,7 +2,7 @@ from pathlib import Path
 import re
 
 from tools.common.file_utils import read_text, read_glob, write_text
-from tools.common.codex_client import run_codex, load_prompt_template
+from tools.common.gemini_client import gemini_run, load_prompt_template
 
 
 OUT_REPORT = "reports/ai/verification_gap_report.md"
@@ -264,7 +264,7 @@ def main():
     Suggest directed tests, assertions, and testbench improvements.
     Do not cliam a test exists unless it is visible in the input.
     """
-    report = run_codex(prompt,fallback)
+    report = gemini_run(prompt,fallback)
     write_text(OUT_REPORT,report)
     print(f"Generated {OUT_REPORT}")
     print(f"Generated sample tests in {GENERATED_TEST_DIR}")

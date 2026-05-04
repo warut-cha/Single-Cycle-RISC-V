@@ -2,7 +2,7 @@ from pathlib import Path
 import re
 
 from tools.common.file_utils import read_glob, write_text
-from tools.common.codex_client import run_codex, load_prompt_template
+from tools.common.gemini_client import gemini_run, load_prompt_template
 
 
 OUT_REPORT = "reports/ai/rtl_review_report.md"
@@ -133,7 +133,7 @@ def main():
     - useful assertions
     Do not invent modules or signals. If a signal name is uncertian say so.
     """
-    report = run_codex(prompt, fallback)
+    report = gemini_run(prompt, fallback)
     write_text(OUT_REPORT, report)
     print(f"Generated {OUT_REPORT}")
 if __name__ == "__main__":

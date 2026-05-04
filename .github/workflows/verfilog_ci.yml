@@ -84,14 +84,14 @@ jobs:
     - name: 5. Run AI RTL Agents
       if: always()
       env:
-        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
       run: |
-        if [ -n "$OPENAI_API_KEY" ]; then
-          echo "OPENAI_API_KEY detected. Running Codex-enabled agents."
+        if [ -n "$GOOGLE_API_KEY" ]; then
+          echo "GOOGLE_API_KEY detected. Running Gemini-enabled agents."
           python3 tools/ai_agent/run_agents.py
         else
-          echo "OPENAI_API_KEY not found. Running rule-based fallback agents."
-          DISABLE_CODEX=1 python3 tools/ai_agent/run_agents.py
+          echo "GOOGLE_API_KEY not found. Running rule-based fallback agents."
+          DISABLE_GEMINI=1 python3 tools/ai_agent/run_agents.py
         fi
 
     - name: 6. Upload Reports
