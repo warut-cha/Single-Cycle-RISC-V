@@ -46,7 +46,7 @@ jobs:
       run: |
         mkdir -p build
         # Added the missing '\' at the end of the line
-        iverilog -g2012 -o build/top_sim src/rtl/*.sv tb/top_tb.sv \
+        iverilog -o build/top_sim src/rtl/*.sv tb/top_tb.sv \
           2>&1 | tee -a reports/sim/compile_log.txt
 
     - name: 3. Run Simulation
