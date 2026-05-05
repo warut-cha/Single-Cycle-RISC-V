@@ -50,7 +50,6 @@ def read_verilog_file(filename: str) -> str:
 
     return requested.read_text(errors="ignore")
 
-
 def write_verilog_file(filename: str, content: str) -> str:
     """
     Writes a SystemVerilog/Verilog file under src/rtl.
@@ -73,10 +72,12 @@ def write_verilog_file(filename: str, content: str) -> str:
     backup_path = requested.with_suffix(requested.suffix + ".bak")
     backup_path.write_text(requested.read_text(errors="ignore"))
 
+    # Verilator requires a POSIX newline at EOF.
+    content = content.rstrip() + "\n"
+
     requested.write_text(content)
 
     return f"Updated {requested}. Backup written to {backup_path}."
-
 
 def gemini_run(prompt, fallback_text):
     """
@@ -119,7 +120,7 @@ def gemini_run(prompt, fallback_text):
         "\n\nAUTO_REPAIR mode is DISABLED. "
         "Do not modify files. Only generate analysis and suggested patches."
         )
-        
+
         config = types.GenerateContentConfig(
             tools=agent_tools,
             temperature=0.1,
