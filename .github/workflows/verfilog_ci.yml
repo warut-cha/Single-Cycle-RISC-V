@@ -16,8 +16,6 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y iverilog verilator yosys python3 python3-pip
-
-          # Optional: install Gemini SDK only if your AI agents use it
           pip install google-genai --break-system-packages
 
       - name: Run RTL Verification Flow
@@ -29,10 +27,11 @@ jobs:
         if: always()
         env:
           GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+          AUTO_REPAIR: "0"
         run: |
           if [ -f tools/ai_agent/run_agents.py ]; then
             if [ -n "$GOOGLE_API_KEY" ]; then
-              echo "GOOGLE_API_KEY detected. Running Gemini-enabled agents."
+              echo "GOOGLE_API_KEY detected. Running Gemini-enabled agents in report-only mode."
               python3 tools/ai_agent/run_agents.py
             else
               echo "GOOGLE_API_KEY not found. Running rule-based fallback agents."

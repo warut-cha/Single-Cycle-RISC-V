@@ -102,6 +102,36 @@ else
 fi
 fi
 
+
+echo
+echo "Generating ALU unit test log"
+echo
+
+if [ -f tb/alu_tb.sv ]; then
+  iverilog -g2012 -o build/alu_tb_sim \
+    src/rtl/alu.sv \
+    tb/alu_tb.sv \
+    2>&1 | tee reports/sim/alu_compile_log.txt
+
+  alu_compile_status=${PIPESTATUS[0]}
+
+  if [ "$alu_compile_status" -ne 0 ]; then
+    echo "ALU unit test compile failed. build/alu_tb_sim was not created." \
+      | tee reports/sim/alu_sim_log.txt
+    alu_status=1
+  else
+    vvp build/alu_tb_sim \
+      2>&1 | tee reports/sim/alu_sim_log.txt
+
+    alu_status=${PIPESTATUS[0]}
+  fi
+else
+  echo "Missing tb/alu_tb.sv" | tee reports/sim/alu_compile_log.txt
+  echo "Missing tb/alu_tb.sv" | tee reports/sim/alu_sim_log.txt
+  alu_compile_status=1
+  alu_status=1
+fi
+
 echo
 echo "Generating synth_log"
 echo 
@@ -180,6 +210,13 @@ if [ "${riscv_status:-0}" -ne 0 ]; then
   final_status=1
 else
   echo "RISCV TESTS PASS"
+fi
+
+if [ "${alu_status:-1}" -ne 0 ]; then
+  echo "ALU UNIT TEST FAIL"
+  final_status=1
+else
+  echo "ALU UNIT TEST PASS"
 fi
 
 if [ "${synth_status:-1}" -ne 0 ]; then

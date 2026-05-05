@@ -27,12 +27,12 @@ module top (
     wire [31:0] alu_results; // wire comes from the ALU at the bottom
     wire [31:0] alu_b_input;
     wire zero_flag;
-    wire ram_write_enable;
     wire [31:0] ram_read_data;
     wire [31:0] write_back_data;
     wire take_branch;
     wire is_led_access;
     wire dmem_write_enable;
+    wire ram_write_enable;
 
     wire apb_psel;
     wire apb_penable;
@@ -52,7 +52,7 @@ module top (
     wire [31:0] jalr_target;
     wire [31:0] pc_plus_4;
     
-    logic [3:0] alu_control;
+    reg [3:0] alu_control; // Changed from logic to reg for broader Verilog compatibility
 
     assign is_load = (opcode_out == 7'h03); //lw
     assign is_store = (opcode_out == 7'h23); //sw
@@ -66,8 +66,11 @@ module top (
     assign pc_plus_4 = current_pc_wire + 32'd4;
     assign take_branch = (is_beq && zero_flag) || (is_bne && !zero_flag);
     assign jalr_target = (rs1_data + imm_i) & 32'hffff_fffe;
-    assign next_pc_wire = is_jal ? (current_pc_wire + imm_j) :is_jal ? jalr_target : take_branch ? (current_pc_wire + imm_b) : pc_plus_4;
-    assign ram_write_enable = (opcode_out == 7'h23);
+    assign next_pc_wire = is_jal ? (current_pc_wire + imm_j) :
+                          is_jalr ? jalr_target : 
+                          take_branch ? (current_pc_wire + imm_b) : 
+                          pc_plus_4;
+    assign ram_write_enable =is_store;
 
     assign is_led_access = (alu_results == 32'h0000_0100);
     assign dmem_write_enable = ram_write_enable && !is_led_access;
@@ -86,13 +89,13 @@ module top (
     assign is_bne = is_branch && (funct3_out == 3'b001);
 
     always @(*) begin
-        alu_control = 4'b0000;
+        alu_control = 4'b0000; // Default to ADD
 
         if (is_load || is_store || is_jalr) begin
-            alu_control = 4'b0000; // ADD for address calculation
+            alu_control = 4'b0000; // ADD for address calculation (LW, SW, JALR)
         end else if (is_branch) begin
-            alu_control = 4'b0001; // SUB for branch comparison
-        end else if (opcode_out == 7'h33) begin
+            alu_control = 4'b0001; // SUB for branch comparison (BEQ, BNE)
+        end else if (opcode_out == 7'h33) begin // R-type instructions
             if (funct3_out == 3'b000 && funct7_out == 7'b0000001)
                 alu_control = 4'b0101; // MUL
             else if (funct3_out == 3'b000 && funct7_out == 7'b0100000)
@@ -108,9 +111,22 @@ module top (
             else if (funct3_out == 3'b010)
                 alu_control = 4'b0110; // SLT
             else
-                alu_control = 4'b0000;
+                alu_control = 4'b0000; // Default for other R-type
+        end else if (opcode_out == 7'h13) begin // I-type instructions (ADDI, ANDI, ORI, XORI, SLTI)
+            if (funct3_out == 3'b000)
+                alu_control = 4'b0000; // ADDI
+            else if (funct3_out == 3'b111)
+                alu_control = 4'b0010; // ANDI
+            else if (funct3_out == 3'b110)
+                alu_control = 4'b0011; // ORI
+            else if (funct3_out == 3'b100)
+                alu_control = 4'b0100; // XORI
+            else if (funct3_out == 3'b010)
+                alu_control = 4'b0110; // SLTI
+            else
+                alu_control = 4'b0000; // Default for other I-type (e.g., SLLI, SRLI, SRAI - not implemented in ALU)
         end else begin
-            alu_control = 4'b0000; // ADDI and unsupported I-type default to ADD
+            alu_control = 4'b0000; // Default for other opcodes (e.g., JAL, LUI, AUIPC)
         end
     end
     // Instantiate the PC
@@ -139,6 +155,7 @@ module top (
 
     regfile regfile_instance (
         .clk(clk),
+        .rst(rst), // Added reset connection
         .write_enable(reg_write_enable), // wire coming from control logic (not implemented yet)
         .rs1_add(rs1_out), // wire coming from decoder
         .rs2_add(rs2_out), // wire coming from decoder

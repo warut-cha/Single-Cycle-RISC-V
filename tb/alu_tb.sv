@@ -2,12 +2,10 @@
 
 module alu_tb;
 
-    // Inputs to the module are 'reg' so we can assign them values
     reg  [31:0] a_tb;
     reg  [31:0] b_tb;
     reg  [3:0]  control_tb;
-    
-    // Outputs from the module are 'wire'
+
     wire [31:0] result_tb;
     wire        zero_tb;
 
@@ -19,60 +17,54 @@ module alu_tb;
         .zero(zero_tb)
     );
 
+    task check;
+        input [3:0] control;
+        input [31:0] a;
+        input [31:0] b;
+        input [31:0] expected;
+        input [127:0] test_name;
+        begin
+            a_tb = a;
+            b_tb = b;
+            control_tb = control;
+            #10;
+
+            if (result_tb !== expected) begin
+                $display("ALU FAIL: %0s expected %h, got %h",
+                         test_name, expected, result_tb);
+                $fatal(1);
+            end else begin
+                $display("ALU PASS: %0s result = %h",
+                         test_name, result_tb);
+            end
+        end
+    endtask
+
     initial begin
         $dumpfile("build/alu_waves.vcd");
         $dumpvars(0, alu_tb);
 
-        // Test case 1: ADD
-        a_tb = 32'd10;
-        b_tb = 32'd5;
-        control_tb = 4'b0000;
-        #10;
-        $display("ADD Test: %0d + %0d = %0d", a_tb, b_tb, result_tb);
+        check(4'b0000, 32'd10, 32'd5,  32'd15, "ADD");
+        check(4'b0001, 32'd20, 32'd5,  32'd15, "SUB");
+        check(4'b0010, 32'h0000_000a, 32'h0000_000c, 32'h0000_0008, "AND");
+        check(4'b0011, 32'h0000_000a, 32'h0000_000c, 32'h0000_000e, "OR");
+        check(4'b0100, 32'h0000_000a, 32'h0000_000c, 32'h0000_0006, "XOR");
+        check(4'b0101, 32'd5,  32'd10, 32'd50, "MUL");
+        check(4'b0110, 32'd5,  32'd10, 32'd1,  "SLT true");
+        check(4'b0110, 32'd10, 32'd5,  32'd0,  "SLT false");
 
-        // Test case 2: SUB
-        a_tb = 32'd20;
-        b_tb = 32'd20;
-        control_tb = 4'b0001;
-        #10;
-        $display("SUB Test: %0d - %0d = %0d (Zero Flag is: %b)", a_tb, b_tb, result_tb, zero_tb);
+        // Zero flag check
+        check(4'b0001, 32'd20, 32'd20, 32'd0, "SUB zero");
 
-        // Test case 3: MUL
-        a_tb = 32'd5;
-        b_tb = 32'd10;
-        control_tb = 4'b0101; //MUL
-        #10;
-        $display("MUL Test: %0d * %0d = %0d", a_tb, b_tb, result_tb);
+        if (zero_tb !== 1'b1) begin
+            $display("ALU FAIL: zero flag expected 1, got %b", zero_tb);
+            $fatal(1);
+        end else begin
+            $display("ALU PASS: zero flag");
+        end
 
-        // Test case 4: SLT
-        a_tb = 32'd5;
-        b_tb = 32'd10;
-        control_tb = 4'b0110; //SLT
-        #10;
-        $display("SLT Test: %0d < %0d = %0d", a_tb, b_tb, result_tb);
-        
-         // Test case 5: AND
-        a_tb = 32'b1010; // 10 in binary
-        b_tb = 32'b1100; // 12 in binary
-        control_tb = 4'b1000; //AND
-        #10;
-        $display("AND Test: %0d & %0d = %0d", a_tb, b_tb, result_tb);
-
-        // Test case 6: OR
-        a_tb = 32'b1010; // 10 in binary
-        b_tb = 32'b1100; // 12 in binary
-        control_tb = 4'b1001; //OR
-        #10;
-        $display("OR Test: %0d | %0d = %0d", a_tb, b_tb, result_tb);
-
-        // Test case 7: XOR
-        a_tb = 32'b1010; // 10 in binary
-        b_tb = 32'b1100; // 12 in binary
-        control_tb = 4'b1010; //XOR
-        #10;
-        $display("XOR Test: %0d ^ %0d = %0d", a_tb, b_tb, result_tb);
-        
-        #10 $finish;
+        $display("ALU UNIT TEST PASS");
+        $finish;
     end
 
 endmodule
