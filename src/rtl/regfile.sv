@@ -1,5 +1,6 @@
 module regfile (
     input wire clk,
+    input wire rst, // Added reset input
     input wire write_enable,
     input wire [4:0] rs1_add, // Source register 1
     input wire [4:0] rs2_add, // Source register 2
@@ -10,22 +11,26 @@ module regfile (
 );
 
     reg[31:0] registers[31:0]; // 32 registers, each 32 bits wide
-    // Init all registers
-    integer i;
-    initial begin
-        for (i = 0; i<32; i = i + 1) begin
-            registers[i] = 32'd0;
-        end
-    end
+    // Init all registers - REMOVED FOR SYNTHESIS
+    // integer i;
+    // initial begin
+    //     for (i = 0; i<32; i = i + 1) begin
+    //         registers[i] = 32'd0;
+    //     end
+    // end
 
     //Reading (No clock needed for reading)
     assign rs1_data = (rs1_add == 5'd0) ? 32'd0 : registers[rs1_add]; // Register x0 is always 0
     assign rs2_data = (rs2_add == 5'd0) ? 32'd0 : registers[rs2_add]; // Register x0 is always 0
 
     //Writing (Synchronous with clock)
-    always @(posedge clk) begin
-        //Only write IF the write Enable flag is turned on AND so we are not trying to overwrite x0
-        if (write_enable == 1'b1 && rd_add != 5'd0) begin
+    always @(posedge clk or posedge rst) begin // Added reset to sensitivity list
+        integer i; // Declare i here for the loop
+        if (rst == 1'b1) begin // Active high reset
+            for (i = 0; i < 32; i = i + 1) begin
+                registers[i] <= 32'b0; // Reset all registers
+            end
+        end else if (write_enable == 1'b1 && rd_add != 5'd0) begin
             registers[rd_add] <= rd_data;
         end
     end

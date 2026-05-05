@@ -9,6 +9,11 @@ module imem(
     reg [1023:0] program_file;
 
     initial begin
+        integer i;
+        for (i = 0; i < 1024; i = i + 1) begin
+            rom[i] = 32'h00000013; // Initialize with NOP (addi x0, x0, 0)
+        end
+
         if (!$value$plusargs("PROGRAM=%s", program_file)) begin
             program_file = "src/txt/program.hex";
         end
@@ -18,6 +23,10 @@ module imem(
     end
 `else
     initial begin
+        integer i;
+        for (i = 0; i < 1024; i = i + 1) begin
+            rom[i] = 32'h00000013; // Initialize with NOP (addi x0, x0, 0)
+        end
         $readmemh("src/txt/program.hex", rom);
     end
 `endif
