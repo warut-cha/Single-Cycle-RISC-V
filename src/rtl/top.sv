@@ -89,9 +89,9 @@ module top (
         alu_control = 4'b0000;
 
         if (is_load || is_store || is_jalr) begin
-            alu_control = 4'b0000; // ADD for address/target calculation
+            alu_control = 4'b0000; // ADD for address calculation
         end else if (is_branch) begin
-            alu_control = 4'b0001; // SUB for BEQ/BNE comparison
+            alu_control = 4'b0001; // SUB for branch comparison
         end else if (opcode_out == 7'h33) begin
             if (funct3_out == 3'b000 && funct7_out == 7'b0000001)
                 alu_control = 4'b0101; // MUL
@@ -99,12 +99,18 @@ module top (
                 alu_control = 4'b0001; // SUB
             else if (funct3_out == 3'b000 && funct7_out == 7'b0000000)
                 alu_control = 4'b0000; // ADD
+            else if (funct3_out == 3'b111)
+                alu_control = 4'b0010; // AND
+            else if (funct3_out == 3'b110)
+                alu_control = 4'b0011; // OR
+            else if (funct3_out == 3'b100)
+                alu_control = 4'b0100; // XOR
             else if (funct3_out == 3'b010)
                 alu_control = 4'b0110; // SLT
             else
-                alu_control = {1'b0, funct3_out};
+                alu_control = 4'b0000;
         end else begin
-            alu_control = {1'b0, funct3_out};
+            alu_control = 4'b0000; // ADDI and unsupported I-type default to ADD
         end
     end
     // Instantiate the PC

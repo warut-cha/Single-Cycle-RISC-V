@@ -14,8 +14,8 @@ module alu (
             4'b0011: result = a | b; // OR
             4'b0100: result = a ^ b; // XOR
             4'b0101: result = a * b; // MUL
-            4'b0110: result = ($signed(a) < $signed(b)) ? 32'b1 : 32'b0; // SLT (Set Less Than)
-            default: result = 32'b0; // DEFAULT
+            4'b0110: result = ($signed(a) < $signed(b)) ? 32'd1 : 32'd0; // SLT
+            default: result = 32'b0;
         endcase
     end
 

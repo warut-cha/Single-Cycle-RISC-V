@@ -1,120 +1,52 @@
 name: ASIC RTL Verification Flow
 
-on: [push, pull_request]
+on:
+  push:
+  pull_request:
 
 jobs:
   asic-flow:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout Repo
-      uses: actions/checkout@v3
+      - name: Checkout Repo
+        uses: actions/checkout@v4
 
-    - name: Install ASIC Tools & AI Dependencies
-      run:  |
-        sudo apt-get update
-        sudo apt-get install -y iverilog verilator yosys
-        # Install the Gemini SDK so the AI agents can run
-        pip install google-genai --break-system-packages
-        
-    - name: Create Report Folders
-      run: |
-        mkdir -p build
-        mkdir -p reports/sim
-        mkdir -p reports/lint
-        mkdir -p reports/synth
-        mkdir -p reports/ai
+      - name: Install ASIC Tools & AI Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y iverilog verilator yosys python3 python3-pip
 
-    - name: 1. Run Hardware Linting (Verilator)
-      run: |
-        echo "Running strict hardware linting"
-        verilator --lint-only -Wall -Isrc/rtl \
-            src/rtl/pc.sv \
-            src/rtl/imem.sv \
-            src/rtl/decoder.sv \
-            src/rtl/regfile.sv \
-            src/rtl/alu.sv \
-            src/rtl/dmem.sv \
-            src/rtl/apb_led.sv \
-            src/rtl/top.sv
-          2>&1 | tee -a reports/lint/lint_log.txt
-        
-        status=${PIPESTATUS[0]}
-        echo "Verilator exit code: $status" | tee -a reports/lint/lint_log.txt
+          # Optional: install Gemini SDK only if your AI agents use it
+          pip install google-genai --break-system-packages
 
-        if [ "$status" -eq 0 ]; then
-          echo "LINT PASS" | tee -a reports/lint/lint_log.txt
-        else
-          echo "LINT FAIL" | tee -a reports/lint/lint_log.txt
-          exit "$status"
-        fi
+      - name: Run RTL Verification Flow
+        run: |
+          chmod +x scripts/generate_logs.sh
+          bash scripts/generate_logs.sh
 
-    - name: 2. Compile Simulation (Icarus Verilog)
-      run: |
-        mkdir -p build
-        iverilog -o build/top_sim \
-          src/rtl/pc.sv \
-          src/rtl/imem.sv \
-          src/rtl/decoder.sv \
-          src/rtl/regfile.sv \
-          src/rtl/alu.sv \
-          src/rtl/dmem.sv \
-          src/rtl/apb_led.sv \
-          src/rtl/top.sv tb/top_tb.sv \
-          2>&1 | tee -a reports/sim/compile_log.txt
+      - name: Run AI RTL Agents
+        if: always()
+        env:
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+        run: |
+          if [ -f tools/ai_agent/run_agents.py ]; then
+            if [ -n "$GOOGLE_API_KEY" ]; then
+              echo "GOOGLE_API_KEY detected. Running Gemini-enabled agents."
+              python3 tools/ai_agent/run_agents.py
+            else
+              echo "GOOGLE_API_KEY not found. Running rule-based fallback agents."
+              DISABLE_GEMINI=1 python3 tools/ai_agent/run_agents.py
+            fi
+          else
+            echo "AI agent script not found. Skipping AI agents."
+          fi
 
-    - name: 3. Run Simulation
-      run: |
-        echo "Running simulation..." | tee reports/sim/sim_log.txt
-
-        vvp build/top_sim \
-          2>&1 | tee -a reports/sim/sim_log.txt
-
-        status=${PIPESTATUS[0]}
-        echo "Simulation exit code: $status" | tee -a reports/sim/sim_log.txt
-
-        if [ "$status" -eq 0 ]; then
-          echo "SIM PASS" | tee -a reports/sim/sim_log.txt
-        else
-          echo "SIM FAIL" | tee -a reports/sim/sim_log.txt
-          exit "$status"
-        fi
-
-    - name: 4. Logic Synthesis & Area Report
-      run: |
-        echo "Running Yosys synthesis..." | tee reports/synth/synth_log.txt
-
-        yosys -s scripts/synth.ys \
-          2>&1 | tee -a reports/synth/synth_log.txt
-
-        status=${PIPESTATUS[0]}
-        echo "Yosys exit code: $status" | tee -a reports/synth/synth_log.txt
-
-        if [ "$status" -eq 0 ]; then
-          echo "SYNTH PASS" | tee -a reports/synth/synth_log.txt
-        else
-          echo "SYNTH FAIL" | tee -a reports/synth/synth_log.txt
-          exit "$status"
-        fi
-
-    - name: 5. Run AI RTL Agents
-      if: always()
-      env:
-        GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
-      run: |
-        if [ -n "$GOOGLE_API_KEY" ]; then
-          echo "GOOGLE_API_KEY detected. Running Gemini-enabled agents."
-          python3 tools/ai_agent/run_agents.py
-        else
-          echo "GOOGLE_API_KEY not found. Running rule-based fallback agents."
-          DISABLE_GEMINI=1 python3 tools/ai_agent/run_agents.py
-        fi
-
-    - name: 6. Upload Reports
-      if: always()
-      uses: actions/upload-artifact@v4
-      with:
-        name: rtl-verification-reports
-        path: |
-          reports/
-          build/
+      - name: Upload Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rtl-verification-reports
+          path: |
+            reports/
+            build/
