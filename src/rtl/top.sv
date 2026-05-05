@@ -175,7 +175,6 @@ module top (
 
     dmem dmem_instance (
         .clk(clk),
-        .rst(rst), // Connect rst
         .write_enable(dmem_write_enable), // wire coming from control logic (not implemented yet)
         .address(alu_results), // wire coming from ALU (not implemented yet)
         .write_data(rs2_data), // wire coming from regfile (not implemented yet)
