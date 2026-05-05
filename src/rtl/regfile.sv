@@ -11,13 +11,6 @@ module regfile (
 );
 
     reg[31:0] registers[31:0]; // 32 registers, each 32 bits wide
-    // Init all registers - REMOVED FOR SYNTHESIS
-    // integer i;
-    // initial begin
-    //     for (i = 0; i<32; i = i + 1) begin
-    //         registers[i] = 32'd0;
-    //     end
-    // end
 
     //Reading (No clock needed for reading)
     assign rs1_data = (rs1_add == 5'd0) ? 32'd0 : registers[rs1_add]; // Register x0 is always 0

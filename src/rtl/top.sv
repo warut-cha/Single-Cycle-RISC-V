@@ -9,7 +9,7 @@ module top (
     output wire [4:0] rs1_out,
     output wire [4:0] rs2_out,
     output wire [7:0] led_out
-);
+    );
 
     // Declare wires to connect our chips
     wire [31:0] current_pc_wire;
@@ -124,15 +124,16 @@ module top (
             else if (funct3_out == 3'b010)
                 alu_control = 4'b0110; // SLTI
             else
-                alu_control = 4'b0000; // Default for other I-type (e.g., SLLI, SRLI, SRAI - not implemented in ALU)
+                alu_control = 4'b1111; // For SLLI, SRLI, SRAI (not implemented in ALU), will result in 0
         end else begin
             alu_control = 4'b0000; // Default for other opcodes (e.g., JAL, LUI, AUIPC)
         end
-    end
+    end 
+
     // Instantiate the PC
     pc pc_instance (
         .clk(clk),
-        .rst(rst),
+        .rst(rst), // Reset PC to 0
         .next_pc(next_pc_wire), // wire coming from adder
         .current_pc(current_pc_wire) // wire going to mem
     );
@@ -194,5 +195,5 @@ module top (
         .pslverr(apb_pslverr),
         .led_out(led_out)
     );
-    
+
 endmodule
