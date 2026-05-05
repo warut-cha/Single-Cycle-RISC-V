@@ -127,8 +127,9 @@ module top (
                 alu_control = 4'b1111; // For SLLI, SRLI, SRAI (not implemented in ALU), will result in 0
         end else begin
             alu_control = 4'b0000; // Default for other opcodes (e.g., JAL, LUI, AUIPC)
-        }
-    end
+        end
+    end 
+
     // Instantiate the PC
     pc pc_instance (
         .clk(clk),
@@ -191,7 +192,8 @@ module top (
         .pwrite_data(apb_pwrite_data),
         .pread_data(apb_pread_data),
         .pready(apb_pready),
-        .pslverr(apb_pslverr)
+        .pslverr(apb_pslverr),
+        .led_out(led_out)
     );
 
 endmodule
