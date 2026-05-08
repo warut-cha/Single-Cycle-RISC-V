@@ -82,12 +82,6 @@ The design is intentionally simple and modular so that each part of the CPU data
 
 > Note: It does not yet implement the full RV32I instruction set.
 
-
-## CPU Architecture Diagram
-
-![CPU Architecture Block Diagram](docs/images/cpu_block_diagram.png)
-
-
 ## RTL Viewer / Netlist
 
 The following images show the RTL structure and synthesized netlist view of the design.
