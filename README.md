@@ -92,9 +92,17 @@ The design is intentionally simple and modular so that each part of the CPU data
 
 The following images show the RTL structure and synthesized netlist view of the design.
 
-![RTL Viewer](docs/images/rtl_viewer.png)
+<p align="center">
+  <img src="docs/images/RTL_viewer.png" width="900">
+</p>
+<p align="center">
+  <img src="docs/images/RTL_viewer_2.png" width="900">
+</p>
 
-![Netlist](docs/images/netlist.png)
+<p align="center">
+  <img src="docs/images/tech_viewer.png" width="900">
+</p>
+
 
 
 ## Verification
@@ -133,25 +141,30 @@ The verification flow checks the following behavior:
 
 ## Simulation
 
-Simulation is used to verify the CPU before FPGA implementation. The testbench runs programs from `.hex` files and checks the final register, memory, and peripheral states.
+Simulation is used to verify the CPU before FPGA implementation. The testbench runs programs from `.hex` files and checks the final register, memory, and peripheral states. The default simulation verifies APB-style LED write and readback behavior.
 
-![Simulation Waveform](docs/images/simulation_waveform.png)
+```text
+PC 0x08: sw x2, 0(x1)
+apb_psel=1 apb_penable=1 apb_pwrite=1 apb_paddr=00000100
+
+PC 0x0c: lw x3, 0(x1)
+apb_psel=1 apb_penable=1 apb_pwrite=0 apb_pread_data=42 write_back=42
+
+Result:
+x3 = 42
+led_out = 42
+```
+This proves that our chip is workign as intended.
 
 ## SignalTap / On-Chip Verification
 
-After FPGA bring up, SignalTap can be used to inspect internal signals directly on hardware.
+After FPGA bring up, SignalTap can be used to inspect internal signals directly on hardware. For SignalTap testing purpose, the clk signal has been sampling down from 50MHz to around 0.75Hz.
 
-Useful signals to observe include:
+<p align="center">
+  <img src="docs/images/signaltap.png" width="900">
+</p>
 
-- Program counter
-- Current instruction
-- Register writeback data
-- ALU result
-- APB peripheral signals
-- LED output
-
-![SignalTap Capture](docs/images/signaltap_capture.png)
-
+As LED lighted as what we programmed it to do (00101010), and you can also see that everytime we pressed reset (KEY[0]), the cpu will stop sending signal and turn off LED until it gets trigger signal from cpu to turn on the LED again. rs2_data bits is showing 42 
 
 ## FPGA Implementation
 
@@ -197,20 +210,12 @@ Expected LED output:
 42 decimal = 8'b0010_1010
 ```
 
-### FPGA Evidence
+### FPGA board (demo)
 
-Add the following later:
-
-- Board photo
-- FPGA setup photo
-- Quartus compilation summary
-- Quartus RTL Viewer screenshot
-- Fitter / resource utilization screenshot
-- SignalTap capture
-- Demo image or GIF
-
-![FPGA Demo](docs/images/fpga_demo.png)
-
+As you can see in the picture below, it shows that on-board LED is lighted as what we programmed (00101010).
+<p>
+  <img src="docs/images/fpga_demo2.jpg" width="300">
+</p>
 
 ## AI-Assisted RTL Workflow
 

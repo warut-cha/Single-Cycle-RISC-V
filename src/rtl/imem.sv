@@ -5,7 +5,7 @@ module imem(
 
     reg [31:0] rom [0:1023];
 
-`ifndef SYNTHESIS
+`ifdef SIMULATION
     reg [1023:0] program_file;
 
     initial begin
