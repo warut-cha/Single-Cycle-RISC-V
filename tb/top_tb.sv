@@ -8,7 +8,7 @@ module top_tb;
     integer test_id;
 
     wire [31:0] instruction_tb;
-    wire [6:0]  op_tb;
+    wire [6:0]  opcode_out_tb;
     wire [4:0]  rd_tb;
     wire [2:0]  funct3_tb;
     wire [6:0]  funct7_tb;
@@ -20,7 +20,7 @@ module top_tb;
         .clk(clk_tb),
         .rst(rst_tb),
         .fct(instruction_tb),
-        .opcode_out(op_tb),
+        .opcode_out(opcode_out_tb),
         .rd_out(rd_tb),
         .funct3_out(funct3_tb),
         .funct7_out(funct7_tb),
@@ -271,20 +271,23 @@ module top_tb;
     end
 
     initial begin
-        $monitor(
-            "Time: %0t | PC: %h | Inst: %h | Op: %h | x0: %0d | x1: %0d | x2: %0d | x3: %0d | x4: %0d | x5: %0d | led_out: %0d",
-            $time,
-            dut.current_pc_wire,
-            instruction_tb,
-            op_tb,
-            dut.regfile_instance.registers[0],
-            dut.regfile_instance.registers[1],
-            dut.regfile_instance.registers[2],
-            dut.regfile_instance.registers[3],
-            dut.regfile_instance.registers[4],
-            dut.regfile_instance.registers[5],
-            led_out
-        );
+            $monitor(
+                "Time: %0t | PC: %h | Inst: %h | Op: %h | x1: %0d | x2: %0d | x3: %0d | led_out: %0d | apb_psel=%b apb_penable=%b apb_pwrite=%b apb_paddr=%h apb_pread_data=%0d write_back=%0d",
+                $time,
+                dut.current_pc_wire,
+                instruction_tb,
+                opcode_out_tb,
+                dut.regfile_instance.registers[1],
+                dut.regfile_instance.registers[2],
+                dut.regfile_instance.registers[3],
+                led_out,
+                dut.apb_psel,
+                dut.apb_penable,
+                dut.apb_pwrite,
+                dut.apb_paddr,
+                dut.apb_pread_data,
+                dut.write_back_data
+            );
     end
 
 endmodule

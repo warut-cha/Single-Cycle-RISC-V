@@ -1,0 +1,22 @@
+addi x1, x0, 0x100
+addi x2, x0, 42
+sw   x2, 0(x1)
+nop
+nop
+nop
+nop
+
+Convertion of .hex
+
+Expect output
+42 decimal = 0b00101010
+
+Physical LED
+LED[7] = 0
+LED[6] = 0
+LED[5] = 1
+LED[4] = 0
+LED[3] = 1
+LED[2] = 0
+LED[1] = 1
+LED[0] = 0

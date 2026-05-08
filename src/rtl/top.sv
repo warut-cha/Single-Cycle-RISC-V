@@ -61,7 +61,9 @@ module top (
     assign use_imm = (opcode_out == 7'h13)||is_load||is_store||is_jalr; // Use immediate for I-type instructions and load/store instructions
     assign reg_write_enable = (opcode_out == 7'h13) || (opcode_out == 7'h33) || is_load || is_jal ||is_jalr; // Enable register write for R-type and I-type instructions, and load instructions
     assign alu_b_input = (use_imm) ? imm_ext : rs2_data; // Select between immediate value and register data for ALU input
-    assign write_back_data = (is_jal || is_jalr) ? pc_plus_4 : (is_load) ? ((is_led_access) ? apb_pread_data : ram_read_data) : alu_results;
+    assign write_back_data = (is_jal || is_jalr) ? pc_plus_4 : 
+                            (is_load) ? ((is_led_access) ? apb_pread_data : ram_read_data) : 
+                            alu_results;
     assign imm_b = {{20{fct[31]}}, fct[7], fct[30:25], fct[11:8], 1'b0}; // Immediate for B-type instructions (sign-extended)
     assign pc_plus_4 = current_pc_wire + 32'd4;
     assign take_branch = (is_beq && zero_flag) || (is_bne && !zero_flag);

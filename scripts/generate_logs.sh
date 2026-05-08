@@ -15,7 +15,7 @@ echo
 echo "Generating sim_log"
 echo
 
-iverilog -g2012 -o build/top_sim \
+iverilog -g2012 -DSIMULATION -o build/top_sim \
   src/rtl/pc.sv \
   src/rtl/imem.sv \
   src/rtl/decoder.sv \
@@ -51,34 +51,34 @@ if compgen -G "$TEST_DIR/*.hex" > /dev/null; then
     test_name="$(basename "$hex_file" .hex)"
     log_file="reports/riscv_tests/${test_name}.log"
 
-    case "$test_name" in
-      addi)
-        test_id=1
-        ;;
-      add_sub)
-        test_id=2
-        ;;
-      logic)
-        test_id=3
-        ;;
-      slt)
-        test_id=4
-        ;;
-      load_store)
-        test_id=5
-        ;;
-      branch_jump)
-        test_id=6
-        ;;
-      mul)
-        test_id=7
-        ;;
-      *)
-        echo "Unknown test name: $test_name"
-        riscv_status=1
-        continue
-        ;;
-    esac
+  case "$test_name" in
+    addi)
+      test_id=1
+      ;;
+    add_sub)
+      test_id=2
+      ;;
+    logic)
+      test_id=3
+      ;;
+    slt)
+      test_id=4
+      ;;
+    load_store)
+      test_id=5
+      ;;
+    branch_jump)
+      test_id=6
+      ;;
+    mul)
+      test_id=7
+      ;;
+    *)
+      echo "Unknown test name: $test_name"
+      riscv_status=1
+      continue
+      ;;
+  esac
 
     echo
     echo "Running $test_name"
@@ -108,7 +108,7 @@ echo "Generating ALU unit test log"
 echo
 
 if [ -f tb/alu_tb.sv ]; then
-  iverilog -g2012 -o build/alu_tb_sim \
+  iverilog -g2012 -DSIMULATION -o build/alu_tb_sim \
     src/rtl/alu.sv \
     tb/alu_tb.sv \
     2>&1 | tee reports/sim/alu_compile_log.txt

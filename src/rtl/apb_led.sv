@@ -12,7 +12,7 @@ module apb_led(
     output reg [7:0] led_out
 );
 
-    localparam LED_ADDR = 32'h000_0100;
+    localparam LED_ADDR = 32'h0000_0100;
     wire apb_write;
     wire apb_read;
     wire led_access;
